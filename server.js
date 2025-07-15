@@ -19,7 +19,7 @@ app.use(cors());
 app.use(express.json());
 app.use(clerkMiddleware());
 
-app.use("/api/clerk", clerkWebhooks);
+app.use("/api/clerk", express.json({ type: "*/*" }), clerkWebhooks);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

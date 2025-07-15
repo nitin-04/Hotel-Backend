@@ -1,5 +1,5 @@
-import Booking from "../models/Booking";
-import Room from "../models/Room";
+import Booking from "../models/Booking.js";
+import Room from "../models/Room.js";
 
 export const checkAvailability = async ({
   checkInDate,

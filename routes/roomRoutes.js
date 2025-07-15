@@ -1,12 +1,12 @@
 import express from "express";
-import upload from "../middleware/uploadMiddleware";
-import { protect } from "../middleware/authMiddleware";
+import upload from "../middleware/uploadMiddleware.js";
+import { protect } from "../middleware/authMiddleware.js";
 import {
   createRoom,
   getOwnerRooms,
   getRooms,
   toggleRoomAvailability,
-} from "../controllers/roomController";
+} from "../controllers/roomController.js";
 
 const roomRouter = express.Router();
 

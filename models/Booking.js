@@ -27,7 +27,7 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
     totalPrice: {
-      type: Numnber,
+      type: Number,
       required: true,
     },
     status: {

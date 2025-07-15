@@ -1,6 +1,6 @@
-import User from "../models/User";
 import { Webhook } from "svix";
 import "dotenv/config";
+import User from "../models/User.js";
 
 const clerkWebhooks = async (req, res) => {
   try {
@@ -12,16 +12,18 @@ const clerkWebhooks = async (req, res) => {
       "svix-signature": req.headers["svix-signature"],
     };
 
-    await whook.verify(JSON.stringify(req.body), headers);
+    const payload = whook.verify(JSON.stringify(req.body), headers); //  store the payload
 
-    const { data, type } = req.body;
+    const { data, type } = payload;
 
     const userData = {
       _id: data.id,
-      username: data.first_name + " " + data.last_name,
-      email: data.email_address[0].email_address,
+      username: `${data.first_name} ${data.last_name}`,
+      email: data.email_addresses?.[0]?.email_address,
       image: data.image_url,
     };
+    console.log("📩 Webhook triggered:", req.body?.type);
+    console.log("👤 User ID:", req.body?.data?.id);
 
     switch (type) {
       case "user.created": {
@@ -29,7 +31,7 @@ const clerkWebhooks = async (req, res) => {
         break;
       }
       case "user.updated": {
-        await User.findByIdAndUpdate(userData, data.id);
+        await User.findByIdAndUpdate(data.id, userData); // ✅ Fix argument order
         break;
       }
       case "user.deleted": {
@@ -39,9 +41,17 @@ const clerkWebhooks = async (req, res) => {
       default:
         break;
     }
-    res.json({ success: true, message: "Webhook Received" });
+
+    res
+      .status(200)
+      .json({ success: true, message: `Webhook processed: ${type}` });
   } catch (error) {
-    console.log(error.message);
+    console.error("Clerk webhook error:", error.message);
+    res.status(400).json({
+      success: false,
+      message: "Invalid webhook",
+      error: error.message,
+    });
   }
 };
 
