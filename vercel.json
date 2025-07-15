@@ -6,12 +6,6 @@
         "use": "@vercel/node"
       }
     ],
-    "functions": {
-    "api/clerk.js": {
-      "memory": 512,
-      "maxDuration": 10
-    }
-    },
     "routes": [
       {
         "src": "/(.*)",
