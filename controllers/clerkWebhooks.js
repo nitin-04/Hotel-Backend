@@ -12,8 +12,7 @@ const clerkWebhooks = async (req, res) => {
       "svix-signature": req.headers["svix-signature"],
     };
 
-    const payload = whook.verify(JSON.stringify(req.body), headers); //  store the payload
-
+    const payload = whook.verify(JSON.stringify(req.body), headers);
     const { data, type } = payload;
 
     const userData = {
@@ -22,23 +21,25 @@ const clerkWebhooks = async (req, res) => {
       email: data.email_addresses?.[0]?.email_address,
       image: data.image_url,
     };
-    console.log("📩 Webhook triggered:", req.body?.type);
-    console.log("👤 User ID:", req.body?.data?.id);
 
     switch (type) {
       case "user.created": {
-        await User.create(userData);
+        const createdUser = await User.create(userData);
+        console.log(" User created in DB:", createdUser);
         break;
       }
       case "user.updated": {
-        await User.findByIdAndUpdate(data.id, userData); // ✅ Fix argument order
+        const updatedUser = await User.findByIdAndUpdate(data.id, userData);
+        console.log(" User updated:", updatedUser);
         break;
       }
       case "user.deleted": {
         await User.findByIdAndDelete(data.id);
+        console.log(" User deleted:", data.id);
         break;
       }
       default:
+        console.log("Unhandled event type:", type);
         break;
     }
 
@@ -46,7 +47,7 @@ const clerkWebhooks = async (req, res) => {
       .status(200)
       .json({ success: true, message: `Webhook processed: ${type}` });
   } catch (error) {
-    console.error("Clerk webhook error:", error.message);
+    console.error(" Clerk Webhook Error:", error.message);
     res.status(400).json({
       success: false,
       message: "Invalid webhook",
