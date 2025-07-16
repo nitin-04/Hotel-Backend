@@ -1,9 +1,10 @@
 import User from "../models/User.js"; // Make sure path is correct
+import { users } from "@clerk/clerk-sdk-node";
 
 export const protect = async (req, res, next) => {
   try {
-    // 1. Get the user ID from Clerk's authentication state
     const { userId } = await req.auth();
+    // console.log("userId: ", userId);
 
     if (!userId) {
       return res.status(401).json({
@@ -12,20 +13,31 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    // 2. Find the user in YOUR database using the clerkUserId field
-    //    DO NOT use findById(). Use findOne() on the field you stored the Clerk ID in.
-    const user = await User.findOne({ clerkUserId: userId });
-    console.log("user: ", user);
+    let user = await User.findOne({ clerkUserId: userId });
+    // console.log("user: ", user);
+
+    // if (!user) {
+    //   const clerkUser = await users.getUser(userId);
+
+    //   user = await User.create({
+    //     clerkUserId: clerkUser.id,
+    //     username: `${clerkUser.firstName || ""} ${
+    //       clerkUser.lastName || ""
+    //     }`.trim(),
+    //     email: clerkUser.emailAddresses[0].emailAddress,
+    //     image: clerkUser.imageUrl,
+    //   });
+
+    //   console.log("✅ Auto-created user in DB from Clerk profile:", user);
+    // }
 
     if (!user) {
-      // This can happen if the webhook for user creation failed or hasn't run yet
       return res.status(404).json({
         success: false,
         message: "User not found in the application database.",
       });
     }
 
-    // 3. Attach the user document from your database to the request object
     req.user = user;
     next();
   } catch (error) {

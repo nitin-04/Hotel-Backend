@@ -34,22 +34,6 @@ app.use("/api/rooms", roomRouter);
 app.use("/api/bookings", bookingRouter);
 
 const PORT = process.env.PORT || 5000;
-
-const startServer = async () => {
-  try {
-    // Wait for the database connection to be established first.
-    await connectDB();
-
-    // Only then, start listening for requests.
-    app.listen(PORT, () => {
-      console.log(
-        `Server is running on port ${PORT} and connected to the database.`
-      );
-    });
-  } catch (error) {
-    console.error("Failed to start server due to database connection error.");
-    console.error(error);
-  }
-};
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

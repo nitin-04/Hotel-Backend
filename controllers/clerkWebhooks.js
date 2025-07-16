@@ -13,6 +13,9 @@ const clerkWebhooks = async (req, res) => {
     // Note: Use req.body directly if using a raw body parser middleware.
     // The svix library handles the stringification and header access.
     const payload = whook.verify(req.body, req.headers);
+    // const payload = JSON.parse(req.body.toString());
+    // console.log("Webhook Event Type:", payload.type);
+    // console.log("Payload Data:", payload.data);
 
     const { data, type } = payload;
     const eventType = type;
