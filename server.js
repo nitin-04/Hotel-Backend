@@ -9,6 +9,7 @@ import hotelRouter from "./routes/hotelRoutes.js";
 import connectCloudinary from "./configs/cloudinary.js";
 import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
+import bodyParser from "body-parser";
 
 connectDB();
 connectCloudinary();
@@ -18,8 +19,11 @@ app.use(cors());
 
 app.use(express.json());
 app.use(clerkMiddleware());
-
-app.use("/api/clerk", express.json({ type: "*/*" }), clerkWebhooks);
+app.use(
+  "/api/clerk",
+  bodyParser.raw({ type: "application/json" }),
+  clerkWebhooks
+);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

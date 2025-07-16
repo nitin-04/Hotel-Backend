@@ -1,57 +1,90 @@
 import { Webhook } from "svix";
-import "dotenv/config";
-import User from "../models/User.js";
+// import "dotenv/config";
+import User from "../models/User.js"; // Ensure this path is correct
 
 const clerkWebhooks = async (req, res) => {
   try {
-    const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+    const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+    if (!WEBHOOK_SECRET) {
+      throw new Error("CLERK_WEBHOOK_SECRET is not set in .env file");
+    }
 
-    const headers = {
-      "svix-id": req.headers["svix-id"],
-      "svix-timestamp": req.headers["svix-timestamp"],
-      "svix-signature": req.headers["svix-signature"],
-    };
+    const whook = new Webhook(WEBHOOK_SECRET);
+    // Note: Use req.body directly if using a raw body parser middleware.
+    // The svix library handles the stringification and header access.
+    const payload = whook.verify(req.body, req.headers);
 
-    const payload = whook.verify(JSON.stringify(req.body), headers);
     const { data, type } = payload;
+    const eventType = type;
 
-    const userData = {
-      _id: data.id,
-      username: `${data.first_name} ${data.last_name}`,
-      email: data.email_addresses?.[0]?.email_address,
-      image: data.image_url,
-    };
+    // --- IDEMPOTENT USER CREATION ---
+    if (eventType === "user.created") {
+      // Check if the user already exists in your database.
+      const existingUser = await User.findOne({ clerkUserId: data.id });
 
-    switch (type) {
-      case "user.created": {
-        const createdUser = await User.create(userData);
-        console.log(" User created in DB:", createdUser);
-        break;
+      if (existingUser) {
+        // If they exist, log it and send a 200 OK response.
+        // This stops the webhook from being retried.
+        console.log(`Webhook skipped: User ${data.id} already exists.`);
+        return res
+          .status(200)
+          .json({ success: true, message: "User already exists" });
       }
-      case "user.updated": {
-        const updatedUser = await User.findByIdAndUpdate(data.id, userData);
-        console.log(" User updated:", updatedUser);
-        break;
+
+      // If they don't exist, create them.
+      const newUser = await User.create({
+        clerkUserId: data.id,
+        username: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+        email: data.email_addresses[0].email_address,
+        image: data.image_url,
+      });
+
+      console.log("User created in DB:", newUser);
+    }
+
+    // --- USER UPDATED ---
+    if (eventType === "user.updated") {
+      const updateData = {
+        username: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
+        email: data.email_addresses[0].email_address,
+        image: data.image_url,
+      };
+
+      const updatedUser = await User.findOneAndUpdate(
+        { clerkUserId: data.id },
+        updateData,
+        { new: true }
+      );
+
+      console.log("User updated:", updatedUser);
+    }
+
+    // --- USER DELETED ---
+    if (eventType === "user.deleted") {
+      // For a deleted user, data.id might be the only info.
+      // Clerk might also send a null `data` object for deleted users sometimes.
+      const idToDelete = data.id;
+      if (!idToDelete) {
+        return res.status(400).json({
+          success: false,
+          message: "User ID for deletion is missing.",
+        });
       }
-      case "user.deleted": {
-        await User.findByIdAndDelete(data.id);
-        console.log(" User deleted:", data.id);
-        break;
-      }
-      default:
-        console.log("Unhandled event type:", type);
-        break;
+
+      const deletedUser = await User.findOneAndDelete({
+        clerkUserId: idToDelete,
+      });
+      console.log("User deleted:", deletedUser);
     }
 
     res
       .status(200)
-      .json({ success: true, message: `Webhook processed: ${type}` });
+      .json({ success: true, message: `Webhook processed: ${eventType}` });
   } catch (error) {
-    console.error(" Clerk Webhook Error:", error.message);
+    console.error("Error in Clerk Webhook Handler:", error.message);
     res.status(400).json({
       success: false,
-      message: "Invalid webhook",
-      error: error.message,
+      message: error.message,
     });
   }
 };

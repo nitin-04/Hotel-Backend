@@ -4,7 +4,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-   "start": "nodemon server.js"
+    "start": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@clerk/express": "^1.7.5",
+    "body-parser": "^2.2.0",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "dotenv": "^17.1.0",

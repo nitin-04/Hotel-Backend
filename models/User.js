@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
 
-const userSchema = mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
-    _id: {
+    // Let Mongoose handle the _id automatically
+    clerkUserId: {
       type: String,
       required: true,
+      unique: true, // Ensures no two users can have the same Clerk ID
+      index: true, // Crucial for fast lookups by Clerk ID
     },
     username: {
       type: String,
@@ -13,10 +16,11 @@ const userSchema = mongoose.Schema(
     email: {
       type: String,
       required: true,
+      unique: true,
     },
     image: {
       type: String,
-      required: true,
+      // Consider if image is always required
     },
     role: {
       type: String,
@@ -26,11 +30,11 @@ const userSchema = mongoose.Schema(
     recentSearchedCities: [
       {
         type: String,
-        required: true,
       },
     ],
   },
   {
+    // This automatically adds createdAt and updatedAt fields
     timestamps: true,
   }
 );
