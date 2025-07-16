@@ -17,13 +17,13 @@ connectCloudinary();
 const app = express();
 app.use(cors());
 
-app.use(express.json());
-app.use(clerkMiddleware());
-app.use(
+app.post(
   "/api/clerk",
   bodyParser.raw({ type: "application/json" }),
   clerkWebhooks
 );
+app.use(express.json());
+app.use(clerkMiddleware());
 
 app.get("/", (req, res) => {
   res.send("API is running...");
