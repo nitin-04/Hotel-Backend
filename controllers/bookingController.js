@@ -1,4 +1,6 @@
+import transporter from "../configs/nodemailer.js";
 import Booking from "../models/Booking.js";
+import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
 
 export const checkAvailability = async ({
@@ -67,9 +69,36 @@ export const createBooking = async (req, res) => {
       guests: +guests,
       totalPrice,
     });
+
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: req.user.email,
+      subject: "Hotel Booking Confirmation",
+      html: `
+        <h1>Your Booking Details</h1>
+        <p>Dear ${req.user.username},</p>
+        <p>Thank you for your booking! Here are your details: </p>
+        <ul>
+        <li><strong> Booking ID:</strong> ${booking._id}</li>
+        <li><strong>Hotel Name:</strong> ${roomData.hotel.name}</li>
+        <li><strong>Location:</strong> ${roomData.hotel.address}</li>
+        <li><strong>Date:</strong> ${booking.checkInDate.toDateString()}</li>
+        <li<strong>Booking Amount:</strong> ${process.env.CURRENCY || "₹"}${
+        booking.totalPrice
+      } /night</li>
+        </ul>
+        <p>We look forward to welcoming you to our hotel!</p>
+        <p>For any questions or concerns, please don't hesitate to contact us.</p>
+        <p>Best regards,<br>The StayFinder Team</p>
+        `,
+    };
+    await transporter.sendMail(mailOptions);
+    // console.log(mailOptions);
+
     res.json({
       success: true,
       message: "Booking created successfully",
+      booking,
     });
   } catch (error) {
     res.json({ success: false, message: error.message });
@@ -79,10 +108,13 @@ export const createBooking = async (req, res) => {
 export const getUserBookings = async (req, res) => {
   try {
     const user = req.user._id;
+    // console.log(user);
+
     const bookings = await Booking.find({ user })
       .populate("room hotel")
       .sort({ createdAt: -1 });
     res.json({ success: true, bookings });
+    // console.log(bookings);
   } catch (error) {
     res.json({ success: false, message: error.message });
   }

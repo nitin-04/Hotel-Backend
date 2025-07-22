@@ -1,7 +1,12 @@
 export const getUserData = async (req, res) => {
   try {
-    const role = req.user.role;
-    const recentSearchedCities = req.user.recentSearchedCities;
+    const role = req?.user?.role;
+    // console.log(role);
+    // console.log(req.user);
+
+    const recentSearchedCities = req?.user?.recentSearchedCities;
+    // console.log(recentSearchedCities);
+
     res.json({ success: true, data: { role, recentSearchedCities } });
   } catch (error) {
     res.json({ success: false, message: error.message });

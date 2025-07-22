@@ -2,12 +2,11 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    // Let Mongoose handle the _id automatically
     clerkUserId: {
       type: String,
       required: true,
-      unique: true, // Ensures no two users can have the same Clerk ID
-      index: true, // Crucial for fast lookups by Clerk ID
+      unique: true,
+      index: true,
     },
     username: {
       type: String,
@@ -20,7 +19,6 @@ const userSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      // Consider if image is always required
     },
     role: {
       type: String,
@@ -34,7 +32,6 @@ const userSchema = new mongoose.Schema(
     ],
   },
   {
-    // This automatically adds createdAt and updatedAt fields
     timestamps: true,
   }
 );

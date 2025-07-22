@@ -1,4 +1,4 @@
-import User from "../models/User.js"; // Make sure path is correct
+import User from "../models/User.js";
 import { users } from "@clerk/clerk-sdk-node";
 
 export const protect = async (req, res, next) => {
@@ -14,22 +14,6 @@ export const protect = async (req, res, next) => {
     }
 
     let user = await User.findOne({ clerkUserId: userId });
-    // console.log("user: ", user);
-
-    // if (!user) {
-    //   const clerkUser = await users.getUser(userId);
-
-    //   user = await User.create({
-    //     clerkUserId: clerkUser.id,
-    //     username: `${clerkUser.firstName || ""} ${
-    //       clerkUser.lastName || ""
-    //     }`.trim(),
-    //     email: clerkUser.emailAddresses[0].emailAddress,
-    //     image: clerkUser.imageUrl,
-    //   });
-
-    //   console.log("✅ Auto-created user in DB from Clerk profile:", user);
-    // }
 
     if (!user) {
       return res.status(404).json({
