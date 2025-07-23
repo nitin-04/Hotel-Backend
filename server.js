@@ -9,7 +9,8 @@ import hotelRouter from "./routes/hotelRoutes.js";
 import connectCloudinary from "./configs/cloudinary.js";
 import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
-import bodyParser from "body-parser";
+import stripeWebhooks from "./controllers/stripeWebhooks.js";
+// import bodyParser from "body-parser";
 
 connectDB();
 connectCloudinary();
@@ -18,10 +19,17 @@ const app = express();
 app.use(cors());
 
 app.post(
+  "/api/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhooks
+);
+
+app.post(
   "/api/clerk",
-  bodyParser.raw({ type: "application/json" }),
+  express.raw({ type: "application/json" }),
   clerkWebhooks
 );
+
 app.use(express.json());
 app.use(clerkMiddleware());
 

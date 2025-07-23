@@ -1,5 +1,4 @@
 import { Webhook } from "svix";
-// import "dotenv/config";
 import User from "../models/User.js";
 
 const clerkWebhooks = async (req, res) => {
@@ -12,9 +11,6 @@ const clerkWebhooks = async (req, res) => {
     const whook = new Webhook(WEBHOOK_SECRET);
 
     const payload = whook.verify(req.body, req.headers);
-
-    // console.log("Webhook Event Type:", payload.type);
-    // console.log("Payload Data:", payload.data);
 
     const { data, type } = payload;
     const eventType = type;
