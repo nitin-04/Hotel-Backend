@@ -40,7 +40,7 @@ const bookingSchema = new mongoose.Schema(
       required: true,
       default: "Pay At Hotel",
     },
-    isPad: {
+    isPaid: {
       type: Boolean,
       default: false,
     },

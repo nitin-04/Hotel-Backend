@@ -4,7 +4,7 @@ import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
 import Stripe from "stripe";
 
-const stripeInstance = new Stripe(process.env.SECRET_KEY);
+const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const checkAvailability = async ({
   checkInDate,
