@@ -179,10 +179,10 @@ export const stripePayment = async (req, res) => {
       cancel_url: `${origin}/my-bookings`,
       metadata: { bookingId },
     });
-    console.log("Booking ID attached to session metadata:", bookingId);
-    console.log("Session metadata:", session.metadata);
+    // console.log("Booking ID attached to session metadata:", bookingId);
+    // console.log("Session metadata:", session.metadata);
 
-    console.log("session", session);
+    // console.log("session", session);
 
     res.json({ success: true, url: session.url });
   } catch (error) {
