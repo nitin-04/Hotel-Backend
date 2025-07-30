@@ -3,53 +3,44 @@ import Booking from "../models/Booking.js";
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const stripeWebhooks = async (request, response) => {
-  const sig = request.headers["stripe-signature"];
+// controllers/stripeWebhooks.js
+
+const stripeWebhooks = async (req, res) => {
+  const sig = req.headers["stripe-signature"];
   let event;
 
   try {
     event = stripeInstance.webhooks.constructEvent(
-      request.body, // Make sure you are passing the RAW body
+      req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-  } catch (error) {
-    console.error("Stripe webhook signature verification failed.", error);
-    return response.status(400).send(`Webhook Error: ${error.message}`);
+  } catch (err) {
+    console.error(
+      "❌ Stripe webhook signature verification failed",
+      err.message
+    );
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle the event
-  if (event.type === "payment_intent.succeeded") {
-    const paymentIntent = event.data.object; // The paymentIntent object
-    const { bookingId } = paymentIntent.metadata; // Get metadata DIRECTLY from the paymentIntent
+  // ✅ Correct event
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const { bookingId } = session.metadata;
 
-    // Best practice: Ensure bookingId exists before updating the database
-    if (bookingId) {
-      try {
-        await Booking.findByIdAndUpdate(bookingId, {
-          isPaid: true,
-          paymentMethod: "Stripe",
-        });
-        console.log(`Booking ${bookingId} successfully updated to paid.`);
-      } catch (dbError) {
-        console.error(
-          `Failed to update booking ${bookingId} in database.`,
-          dbError
-        );
-        // Optionally, return a 500 error to have Stripe retry the webhook
-        return response.status(500).json({ error: "Database update failed." });
-      }
-    } else {
-      console.error(
-        `Webhook Error: bookingId not found in payment_intent.succeeded metadata. PaymentIntent ID: ${paymentIntent.id}`
-      );
-    }
-  } else {
-    console.log(`Unhandled event type: ${event.type}`);
+    console.log("✅ Booking ID from metadata:", bookingId);
+
+    await Booking.findByIdAndUpdate(bookingId, {
+      isPaid: true,
+      status: "confirmed",
+      paymentMethod: "Stripe",
+    });
+
+    return res.json({ received: true });
   }
 
-  // Return a 200 response to acknowledge receipt of the event
-  response.json({ received: true });
+  console.log("⚠️ Ignored event:", event.type);
+  res.json({ received: true });
 };
 
 export default stripeWebhooks;
