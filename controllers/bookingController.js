@@ -150,8 +150,13 @@ export const getHotelBookings = async (req, res) => {
 export const stripePayment = async (req, res) => {
   try {
     const { bookingId } = req.body;
+    // console.log(bookingId);
+
     const booking = await Booking.findById(bookingId);
+    // console.log(booking);
+
     const roomData = await Room.findById(booking.room).populate("hotel");
+    const totalPrice = booking.totalPrice;
     const { origin } = req.headers;
 
     const line_items = [
@@ -161,23 +166,23 @@ export const stripePayment = async (req, res) => {
           product_data: {
             name: roomData.hotel.name,
           },
-          unit_amount: booking.totalPrice * 100, // in cents
+          unit_amount: totalPrice * 100, // in cents
         },
         quantity: 1,
       },
     ];
 
     const session = await stripeInstance.checkout.sessions.create({
-      payment_intent_data: {
-        metadata: {
-          bookingId,
-        },
-      },
       line_items,
       mode: "payment",
       success_url: `${origin}/loader/my-bookings`,
       cancel_url: `${origin}/my-bookings`,
+      metadata: { bookingId },
     });
+    console.log("Booking ID attached to session metadata:", bookingId);
+    console.log("Session metadata:", session.metadata);
+
+    console.log("session", session);
 
     res.json({ success: true, url: session.url });
   } catch (error) {
